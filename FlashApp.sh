@@ -108,11 +108,11 @@ if [ ! -d $ota_boot_mount_point ] || [ ! -d $old_boot_bkup ] || [ ! -d $ota_root
     exit 1
 fi
 
-echo "boot_partition: $boot_partition"
-echo "ota_boot_mount_point: $ota_boot_mount_point"
-echo "old_boot_bkup: $old_boot_bkup"
-echo "ota_rootfs_mount_point: $ota_rootfs_mount_point"
-echo "target_rootfs_mount_point: $target_rootfs_mount_point"
+logger "boot_partition: $boot_partition"
+logger "ota_boot_mount_point: $ota_boot_mount_point"
+logger "old_boot_bkup: $old_boot_bkup"
+logger "ota_rootfs_mount_point: $ota_rootfs_mount_point"
+logger "target_rootfs_mount_point: $target_rootfs_mount_point"
 
 # TODO: block the signals to avoid any interruptions during the firmware update.
 
@@ -199,7 +199,7 @@ ota_boot_node=$losetupNode"p1"
 logger "Mounting the rootfs partition '$ota_boot_node' at '$ota_boot_mount_point' as read-only"
 mount -o ro $ota_boot_node $ota_boot_mount_point
 if [ $? -ne 0 ]; then
-    echo "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
+    logger "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
     exit 1
 else
     logger "Copying the contents of '$ota_boot_mount_point' to '/boot'"
