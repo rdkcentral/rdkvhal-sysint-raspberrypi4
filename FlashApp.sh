@@ -12,15 +12,15 @@ if [ -z "$PERSISTENT_PATH" ]; then
     PERSISTENT_PATH=$(pwd)
 fi
 OUTPUT="$PERSISTENT_PATH/output.txt"
-EXTBLOCK="$PERSISTENT_PATH/extblock"
-WICIMAGEFILE="$PERSISTENT_PATH/wicimage"
+EXTBLOCK="$PERSISTENT_PATH/ota/extblock"
+WICIMAGEFILE="$PERSISTENT_PATH/ota"
 
 logger() {
     echo "$(date) FlashApp.sh > $1" | tee -a $OUTPUT
 }
 
 # Check if all the commands used in this script are available
-commandsRequired="umount df grep tail cut head fdisk mount umount cp rm mkdir sed reboot stat tee date tar read"
+commandsRequired="echo exit ls grep mkdir tar cp rm sync stat losetup mount umount reboot df sed awk"
 for cmd in $commandsRequired; do
     if ! command -v $cmd > /dev/null; then
         logger "Required command '$cmd' not found; cannot proceed, exiting."
@@ -111,41 +111,24 @@ else
     logger "The '/boot/' back-up to '$old_boot_bkup' is successful."
 fi
 
-ota_sector_info=$EXTBLOCK/sector.txt
-
-[ -f $ota_sector_info ] && rm -f $ota_sector_info
-if [ $(cat /version.txt | grep -c "dunfell") != "0" ]; then
-    fdisk -l $cloudFWFile > $ota_sector_info
-else
-    fdisk -u -l $cloudFWFile > $ota_sector_info
-fi
-
-# Extract partition information from the WIC image; it only has 2 partitions /boot and /linuxRootFS.
-BOOT_START_CHS=$(fdisk -l $cloudFWFile | grep -E "^$cloudFWFile"1 | awk '{print $4}')
-FS_START_LBA=$(fdisk -l $cloudFWFile | grep -E "^$cloudFWFile"2 | awk '{print $4}')
-
-# Convert CHS to LBA for the boot partition
-IFS=',' read -r C H S <<< "$BOOT_START_CHS"
-SECTORS_PER_TRACK=32
-HEADS=4
-CYLINDERS=$((C + 1))
-BOOT_START_LBA=$(( (CYLINDERS * HEADS + H) * SECTORS_PER_TRACK + (S - 1) ))
-
-# Calculate offsets in bytes (sector size is 512 bytes)
-ota_boot_offset=$((BOOT_START_LBA * 512))
-ota_rootfs_offset=$((FS_START_LBA * 512))
-
-logger "Boot partition start CHS: $BOOT_START_CHS"
-logger "Boot partition start LBA: $BOOT_START_LBA"
-logger "RootFS partition start LBA: $FS_START_LBA"
-logger "Boot partition offset: $ota_boot_offset"
-logger "RootFS partition offset: $ota_rootfs_offset"
-
 isRootFSUpdateSuccess=0
-mount -o loop,offset=$ota_rootfs_offset -t ext4 $cloudFWFile $ota_rootfs_mount_point
+# Mount the WIC file using losetup and get the node name
+losetupNode=$(losetup --find --show --partscan $cloudFWFile)
+if [ -z "$losetupNode" ]; then
+    logger "Failed to setup loop device for $cloudFWFile; cannot proceed, exiting."
+    exit 1
+fi
+logger "Loop device '$losetupNode' is setup for $cloudFWFile"
+
+# mount the P2 partition which is RootFS as readonly to avoid any accidental writes
+ota_rootfs_node=$losetupNode"p2"
+logger "Mounting the rootfs partition '$ota_rootfs_node' at '$ota_rootfs_mount_point' as read-only"
+
+mount -o ro $ota_rootfs_node $ota_rootfs_mount_point
 if [ $? -ne 0 ]; then
     echo "Failed to mount $cloudFWFile at $ota_rootfs_mount_point with offset $ota_rootfs_offset"
-    umount $BOOT_MOUNT_POINT
+    # Try unmounting and exit; may fail.
+    umount $ota_rootfs_mount_point
     exit 1
 else
     # We have two rootfs partitions; one is the current rootfs and the other is the new rootfs.
@@ -158,35 +141,52 @@ else
     fi
     logger "Active rootfs partition: $activeBankDev"
     logger "Passive partition: $passiveBankDev"
-    mount -t ext4 $passiveBankDev $target_rootfs_mount_point
-    if [ $? -ne 0 ]; then
-        logger "Failed to mount the passive rootfs partition '$passiveBankDev'; cannot proceed, exiting."
-        umount $ota_boot_mount_point
-        umount $ota_rootfs_mount_point
-        # TODO: roll-back everything
-        exit 1
+    logger "Updating '$passiveBankDev' with the contents of '$ota_rootfs_mount_point'"
+
+    dontUmountPassiveBank=0
+    # check if the passive rootfs partition is already mounted; if so, use it.
+    # TODO: handle RO mounted partitions.
+    passiveBankMountPoint=$(mount | grep $passiveBankDev | awk '{print $3}')
+    if [ -n "$passiveBankMountPoint" ]; then
+        dontUmountPassiveBank=1
+        logger "Passive rootfs partition '$passiveBankDev' is already mounted at '$passiveBankMountPoint'; proceeding with that."
+        target_rootfs_mount_point=$passiveBankMountPoint
+        logger "Using premounted target_rootfs_mount_point: $target_rootfs_mount_point"
     else
-        logger "Copying the contents of '$ota_rootfs_mount_point' to '$target_rootfs_mount_point'"
-        rm -rf $target_rootfs_mount_point/* && sync
-        cp -ar $ota_rootfs_mount_point/* $target_rootfs_mount_point/ && sync
+        mount -t ext4 $passiveBankDev $target_rootfs_mount_point
         if [ $? -ne 0 ]; then
-            logger "Failed to copy the contents of '$ota_rootfs_mount_point' to '$target_rootfs_mount_point'; revert to old
-            and abort."
-        else
-            logger "The contents of '$ota_rootfs_mount_point' are copied to '$target_rootfs_mount_point' successfully."
-            isRootFSUpdateSuccess=1
+            logger "Failed to mount the passive rootfs partition '$passiveBankDev'; cannot proceed, exiting."
+            umount $ota_rootfs_mount_point
+            # Try unmounting target_rootfs_mount_point and exit; may fail.
+            umount $target_rootfs_mount_point
+            exit 1
         fi
     fi
-    umount $target_rootfs_mount_point
-    umount $ota_boot_mount_point
+    logger "Copying the contents of '$ota_rootfs_mount_point' to '$target_rootfs_mount_point'"
+    rm -rf $target_rootfs_mount_point/* && sync
+    cp -ar $ota_rootfs_mount_point/* $target_rootfs_mount_point/ && sync
+    if [ $? -ne 0 ]; then
+        logger "Failed to copy the contents of '$ota_rootfs_mount_point' to '$target_rootfs_mount_point'; revert and abort."
+    else
+        logger "The contents of '$ota_rootfs_mount_point' are copied to '$target_rootfs_mount_point' successfully."
+        echo "OTA_UPDATED_ROOTFS=1" >> $target_rootfs_mount_point/version.txt
+        isRootFSUpdateSuccess=1
+    fi
+    if [ $dontUmountPassiveBank -eq 0 ]; then
+        umount $target_rootfs_mount_point
+    fi
     umount $ota_rootfs_mount_point
 fi
 
 isBootUpdateSuccess=0
-# Mount the partitions using loopback with offset
-mount -o loop,offset=$ota_boot_offset -t vfat $cloudFWFile $ota_boot_mount_point
+
+# mount the P1 partition which is Boot partition as readonly to avoid any accidental writes
+ota_boot_node=$losetupNode"p1"
+logger "Mounting the rootfs partition '$ota_boot_node' at '$ota_boot_mount_point' as read-only"
+
+mount -o ro $ota_boot_node $ota_boot_mount_point
 if [ $? -ne 0 ]; then
-    echo "Failed to mount $cloudFWFile at $ota_boot_mount_point with offset $ota_boot_offset"
+    echo "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
     exit 1
 else
     logger "Copying the contents of '$ota_boot_mount_point' to '/boot'"
@@ -205,6 +205,14 @@ else
         logger "The contents of '$ota_boot_mount_point' are copied to '/boot' successfully."
         isBootUpdateSuccess=1
     fi
+    # may fail; ignore.
+    umount $ota_boot_mount_point
+fi
+
+logger "Unmounting the loop device '$losetupNode'"
+losetup -d $losetupNode && sync
+if [ $? -ne 0 ]; then
+    logger "Failed to unmount the loop device '$losetupNode'."
 fi
 
 if [ $isBootUpdateSuccess -eq 1 ] && [ $isRootFSUpdateSuccess -eq 1 ]; then
@@ -215,13 +223,13 @@ if [ $isBootUpdateSuccess -eq 1 ] && [ $isRootFSUpdateSuccess -eq 1 ]; then
         logger "Failed to update the cmdline.txt; manual recovery required, exiting."
         exit 1
     else
-        logger "The cmdline.txt is updated successfully to use '$passiveBankDev'."
+        logger "The cmdline.txt is updated successfully to use '$passiveBankDev'. rebooting the device."
+        rm -rf $EXTBLOCK && sync
+        reboot -f
     fi
-    reboot -f
 else
     logger "The firmware update is failed; cannot proceed, exiting."
     exit 1
 fi
 
 exit 0
-# reboot -f
