@@ -9,18 +9,19 @@ if [ -f /etc/device.properties ]; then
 fi
 
 if [ -z "$PERSISTENT_PATH" ]; then
-    PERSISTENT_PATH=$(pwd)
+    PERSISTENT_PATH="/opt"
 fi
+
 OUTPUT="$PERSISTENT_PATH/output.txt"
 EXTBLOCK="$PERSISTENT_PATH/ota/extblock"
-WICIMAGEFILE="$PERSISTENT_PATH/ota"
+WICIMAGEFILE="$PERSISTENT_PATH/ota/wicimage"
 
 logger() {
     echo "$(date) FlashApp.sh > $1" | tee -a $OUTPUT
 }
 
 # Check if all the commands used in this script are available
-commandsRequired="echo exit ls grep mkdir tar cp rm sync stat losetup mount umount reboot df sed awk"
+commandsRequired="date echo exit ls grep mkdir tar cp rm sync stat losetup mount umount reboot df sed awk md5sum trap"
 for cmd in $commandsRequired; do
     if ! command -v $cmd > /dev/null; then
         logger "Required command '$cmd' not found; cannot proceed, exiting."
@@ -32,20 +33,27 @@ done
 # 1. /usr/bin/FlashApp "$DOWNLOAD_LOCATION/$UPGRADE_FILE"
 # 2. /usr/bin/FlashApp "$DOWNLOAD_LOCATION" "$UPGRADE_FILE"
 if [ $# -eq 2 ]; then
-    cloudFWFile=$1/$2
-    logger "Firmware image file is passed as two arguments"
+    cloudFWFile="$1/$2"
+    logger "Invoked with two arguments '$1' and '$2'"
 elif [ $# -eq 1 ]; then
-    cloudFWFile=$1
-    logger "Firmware image file is passed as one argument"
+    cloudFWFile="$1"
+    logger "Invoked with single argument '$1'"
 else
     logger "Invalid number of arguments passed"
     echo "Usage: $0 <Absolute path to Firmware Image File>"
     exit 1
 fi
 
+md5sumFile=$(md5sum $cloudFWFile | cut -d' ' -f1)
+logger "Firmware image file received: '$cloudFWFile' with md5sum '$md5sumFile'"
+
 # RPI OTA image is a compressed file; extract it if so.
 if [ $(ls $cloudFWFile | grep -c "tar.gz") -eq 1 ]; then
     compressedFile=$cloudFWFile
+    if [ -d $WICIMAGEFILE ]; then
+        logger "Cleaning up the old directory '$WICIMAGEFILE'"
+        rm -rf $WICIMAGEFILE && sync
+    fi
     logger "Extracting the compressed firmware image file into '$WICIMAGEFILE'"
     mkdir -p $WICIMAGEFILE
     tar -xzf $cloudFWFile -C $WICIMAGEFILE && sync
@@ -101,6 +109,7 @@ echo "old_boot_bkup: $old_boot_bkup"
 echo "ota_rootfs_mount_point: $ota_rootfs_mount_point"
 echo "target_rootfs_mount_point: $target_rootfs_mount_point"
 
+# TODO: block the signals to avoid any interruptions during the firmware update.
 # back-up the contents of /boot partition
 logger "Backing up the contents of '/boot' partition to '$old_boot_bkup'"
 cp -ar /boot/* $old_boot_bkup/ && sync
@@ -169,7 +178,7 @@ else
         logger "Failed to copy the contents of '$ota_rootfs_mount_point' to '$target_rootfs_mount_point'; revert and abort."
     else
         logger "The contents of '$ota_rootfs_mount_point' are copied to '$target_rootfs_mount_point' successfully."
-        echo "OTA_UPDATED_ROOTFS=1" >> $target_rootfs_mount_point/version.txt
+        echo "OTA_UPDATED_ROOTFS="$(date)"" >> $target_rootfs_mount_point/version.txt
         isRootFSUpdateSuccess=1
     fi
     if [ $dontUmountPassiveBank -eq 0 ]; then
@@ -223,12 +232,11 @@ if [ $isBootUpdateSuccess -eq 1 ] && [ $isRootFSUpdateSuccess -eq 1 ]; then
         logger "Failed to update the cmdline.txt; manual recovery required, exiting."
         exit 1
     else
-        logger "The cmdline.txt is updated successfully to use '$passiveBankDev'. rebooting the device."
+        logger "The cmdline.txt is updated successfully to use '$passiveBankDev'."
         rm -rf $EXTBLOCK && sync
-        reboot -f
     fi
 else
-    logger "The firmware update is failed; cannot proceed, exiting."
+    logger "The firmware update failed; cannot proceed, exiting."
     exit 1
 fi
 
