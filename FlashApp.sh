@@ -12,12 +12,17 @@ if [ -z "$PERSISTENT_PATH" ]; then
     PERSISTENT_PATH="/opt"
 fi
 
-OUTPUT="$PERSISTENT_PATH/output.txt"
+if [ -z "$LOG_PATH" ]; then
+    LOG_PATH="/opt/logs"
+    mkdir -p $LOG_PATH
+fi
+
+FLASHAPPLOGFILE="$LOG_PATH/FlashApp.log"
 EXTBLOCK="$PERSISTENT_PATH/ota/extblock"
 WICIMAGEFILE="$PERSISTENT_PATH/ota/wicimage"
 
 logger() {
-    echo "$(date) FlashApp.sh > $1" | tee -a $OUTPUT
+    echo "$(date) FlashApp.sh > $1" | tee -a $FLASHAPPLOGFILE
 }
 
 # Check if all the commands used in this script are available
@@ -110,6 +115,7 @@ echo "ota_rootfs_mount_point: $ota_rootfs_mount_point"
 echo "target_rootfs_mount_point: $target_rootfs_mount_point"
 
 # TODO: block the signals to avoid any interruptions during the firmware update.
+
 # back-up the contents of /boot partition
 logger "Backing up the contents of '/boot' partition to '$old_boot_bkup'"
 cp -ar /boot/* $old_boot_bkup/ && sync
@@ -148,8 +154,7 @@ else
     else
         passiveBankDev="/dev/mmcblk0p2"
     fi
-    logger "Active rootfs partition: $activeBankDev"
-    logger "Passive partition: $passiveBankDev"
+    logger "Active rootfs partition: '$activeBankDev' and Passive partition: '$passiveBankDev'."
     logger "Updating '$passiveBankDev' with the contents of '$ota_rootfs_mount_point'"
 
     dontUmountPassiveBank=0
@@ -192,7 +197,6 @@ isBootUpdateSuccess=0
 # mount the P1 partition which is Boot partition as readonly to avoid any accidental writes
 ota_boot_node=$losetupNode"p1"
 logger "Mounting the rootfs partition '$ota_boot_node' at '$ota_boot_mount_point' as read-only"
-
 mount -o ro $ota_boot_node $ota_boot_mount_point
 if [ $? -ne 0 ]; then
     echo "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
