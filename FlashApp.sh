@@ -17,7 +17,10 @@ if [ -z "$LOG_PATH" ]; then
     mkdir -p $LOG_PATH
 fi
 
-FLASHAPPLOGFILE="$LOG_PATH/FlashApp.log"
+if [ -z "$FLASHAPPLOGFILE" ]; then
+    FLASHAPPLOGFILE="$LOG_PATH/flashapp.log"
+fi
+
 EXTBLOCK="$PERSISTENT_PATH/ota/extblock"
 WICIMAGEFILE="$PERSISTENT_PATH/ota/wicimage"
 
@@ -67,7 +70,7 @@ if [ $(ls $cloudFWFile | grep -c "tar.gz") -eq 1 ]; then
         logger "Extracted firmware image file not found; cannot proceed, exiting."
         exit 1
     fi
-    # Remove the uncompressed file for space saving.
+    # Remove the compressed file for space saving.
     logger "Removing the compressed firmware image file '$compressedFile'"
     rm -rf $compressedFile && sync
 fi
@@ -118,6 +121,7 @@ logger "target_rootfs_mount_point: $target_rootfs_mount_point"
 
 # back-up the contents of /boot partition
 logger "Backing up the contents of '/boot' partition to '$old_boot_bkup'"
+rm -rf $old_boot_bkup/* && sync
 cp -ar /boot/* $old_boot_bkup/ && sync
 if [ $? -ne 0 ]; then
     logger "Failed to back-up the contents of '$ota_boot_mount_point' partition; cannot proceed, exiting."
