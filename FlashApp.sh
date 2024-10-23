@@ -98,7 +98,7 @@ old_boot_bkup=$EXTBLOCK/old_boot_bkup
 clean_up() {
     logger "Cleaning up the mounts and loop devices."
     for mountPointName in $ota_boot_mount_point $ota_rootfs_mount_point $target_rootfs_mount_point; do
-        if [ $dontUmountPassiveBank -eq 1 ]; then
+        if [ "$mountPointName" == "$target_rootfs_mount_point" ] && [ $dontUmountPassiveBank -eq 1 ]; then
             # skip the passive bank mount point as its not mounted by this script.
             continue
         fi
