@@ -94,6 +94,34 @@ ota_rootfs_mount_point=$EXTBLOCK/ota_rootfs
 target_rootfs_mount_point=$EXTBLOCK/target_rootfs
 old_boot_bkup=$EXTBLOCK/old_boot_bkup
 
+# Function to clean up the mounts and loop devices on exit condition.
+clean_up() {
+    logger "Cleaning up the mounts and loop devices."
+    for mountPointName in $ota_boot_mount_point $ota_rootfs_mount_point $target_rootfs_mount_point; do
+        if [ $dontUmountPassiveBank -eq 1 ]; then
+            # skip the passive bank mount point as its not mounted by this script.
+            continue
+        fi
+        if mountpoint -q "$mountPointName"; then
+            logger "Unmounting the mount point '$mountPointName'"
+            umount $mountPointName
+        fi
+    done
+    logger "Unmounting the loop device '$losetupNode'"
+    losetup -d $losetupNode && sync
+    if [ $? -ne 0 ]; then
+        logger "Failed to unmount the loop device '$losetupNode'."
+    fi
+    rm -rf $EXTBLOCK
+    rm -rf $WICIMAGEFILE
+    if [ -f $cloudFWFile ]; then
+        rm -f $cloudFWFile
+    fi
+    sync
+    # remove the signal handlers
+    trap - INT TERM HUP
+}
+
 if [ -z "$boot_partition" ]; then
     logger "No /boot partition found; cannot proceed, exiting."
     exit 1
@@ -125,16 +153,27 @@ rm -rf $old_boot_bkup/* && sync
 cp -ar /boot/* $old_boot_bkup/ && sync
 if [ $? -ne 0 ]; then
     logger "Failed to back-up the contents of '$ota_boot_mount_point' partition; cannot proceed, exiting."
+    clean_up
     exit 1
 else
     logger "The '/boot/' back-up to '$old_boot_bkup' is successful."
 fi
+
+signal_handler() {
+    logger "Update in progress, dismissing received signal '$1'."
+}
+
+# Prevent interrupts while updating the firmware.
+trap 'signal_handler INT' INT
+trap 'signal_handler TERM' TERM
+trap 'signal_handler HUP' HUP
 
 isRootFSUpdateSuccess=0
 # Mount the WIC file using losetup and get the node name
 losetupNode=$(losetup --find --show --partscan $cloudFWFile)
 if [ -z "$losetupNode" ]; then
     logger "Failed to setup loop device for $cloudFWFile; cannot proceed, exiting."
+    clean_up
     exit 1
 fi
 logger "Loop device '$losetupNode' is setup for $cloudFWFile"
@@ -146,8 +185,7 @@ logger "Mounting the rootfs partition '$ota_rootfs_node' at '$ota_rootfs_mount_p
 mount -o ro $ota_rootfs_node $ota_rootfs_mount_point
 if [ $? -ne 0 ]; then
     echo "Failed to mount $cloudFWFile at $ota_rootfs_mount_point with offset $ota_rootfs_offset"
-    # Try unmounting and exit; may fail.
-    umount $ota_rootfs_mount_point
+    clean_up
     exit 1
 else
     # We have two rootfs partitions; one is the current rootfs and the other is the new rootfs.
@@ -174,9 +212,7 @@ else
         mount -t ext4 $passiveBankDev $target_rootfs_mount_point
         if [ $? -ne 0 ]; then
             logger "Failed to mount the passive rootfs partition '$passiveBankDev'; cannot proceed, exiting."
-            umount $ota_rootfs_mount_point
-            # Try unmounting target_rootfs_mount_point and exit; may fail.
-            umount $target_rootfs_mount_point
+            clean_up
             exit 1
         fi
     fi
@@ -204,7 +240,7 @@ logger "Mounting the rootfs partition '$ota_boot_node' at '$ota_boot_mount_point
 mount -o ro $ota_boot_node $ota_boot_mount_point
 if [ $? -ne 0 ]; then
     logger "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
-    exit 1
+    clean_up
 else
     logger "Copying the contents of '$ota_boot_mount_point' to '/boot' after cleaning it."
     rm -rf /boot/* && sync
@@ -217,7 +253,7 @@ else
         else
             logger "Reverted '/boot' with contents of '$ota_boot_mount_point' successfully."
         fi
-        umount $ota_boot_mount_point
+        clean_up
         exit 1
     else
         logger "The contents of '$ota_boot_mount_point' are copied to '/boot' successfully."
@@ -227,29 +263,22 @@ else
     umount $ota_boot_mount_point
 fi
 
-logger "Unmounting the loop device '$losetupNode'"
-losetup -d $losetupNode && sync
-if [ $? -ne 0 ]; then
-    logger "Failed to unmount the loop device '$losetupNode'."
-fi
-
 if [ $isBootUpdateSuccess -eq 1 ] && [ $isRootFSUpdateSuccess -eq 1 ]; then
     # Both boot and rootfs partitions are updated successfully; update the cmdline.txt to use new RootFS partition.
     logger "Updating the cmdline.txt to use the new rootfs partition '$passiveBankDev'"
     sed -i "s|$activeBankDev|$passiveBankDev|g" /boot/cmdline.txt && sync
     if [ $? -ne 0 ]; then
         logger "Failed to update the cmdline.txt; manual recovery required, exiting."
+        clean_up
         exit 1
     else
         logger "The cmdline.txt is updated successfully to use '$passiveBankDev'."
-        rm -rf $EXTBLOCK && sync
+        clean_up
     fi
 else
     logger "The firmware update failed; cannot proceed, exiting."
+    clean_up
     exit 1
 fi
-
-logger "Deleting '$cloudFWFile' as part of final clean-up."
-rm $cloudFWFile && sync
 
 exit 0
