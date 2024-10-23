@@ -206,7 +206,8 @@ if [ $? -ne 0 ]; then
     logger "Failed to mount $ota_boot_node at $ota_boot_mount_point; exiting."
     exit 1
 else
-    logger "Copying the contents of '$ota_boot_mount_point' to '/boot'"
+    logger "Copying the contents of '$ota_boot_mount_point' to '/boot' after cleaning it."
+    rm -rf /boot/* && sync
     cp -ar $ota_boot_mount_point/* /boot/ && sync
     if [ $? -ne 0 ]; then
         logger "Failed to copy the contents of '$ota_boot_mount_point' to '/boot'; revert to old and abort."
