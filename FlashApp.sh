@@ -29,7 +29,7 @@ logger() {
 }
 
 # Check if all the commands used in this script are available
-commandsRequired="date echo exit ls grep mkdir tar cp rm sync stat losetup mount umount reboot df sed awk md5sum trap"
+commandsRequired="date echo exit ls grep mkdir tar cp rm sync stat losetup mount umount reboot df sed awk md5sum trap mountpoint"
 for cmd in $commandsRequired; do
     if ! command -v $cmd > /dev/null; then
         logger "Required command '$cmd' not found; cannot proceed, exiting."
