@@ -249,4 +249,7 @@ else
     exit 1
 fi
 
+logger "Deleting '$cloudFWFile' as part of final clean-up."
+rm $cloudFWFile && sync
+
 exit 0
