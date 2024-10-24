@@ -65,9 +65,15 @@ if [ $(ls $cloudFWFile | grep -c "tar.gz") -eq 1 ]; then
     logger "Extracting the compressed firmware image file into '$WICIMAGEFILE'"
     mkdir -p $WICIMAGEFILE
     tar -xzf $cloudFWFile -C $WICIMAGEFILE && sync
+    if [ $? -ne 0 ]; then
+        logger "Failed to extract the compressed firmware image file; cannot proceed, exiting."
+        rm -rf $WICIMAGEFILE $cloudFWFile && sync
+        exit 1
+    fi
     cloudFWFile=$(ls $WICIMAGEFILE/*.wic)
     if [ -z "$cloudFWFile" ]; then
         logger "Extracted firmware image file not found; cannot proceed, exiting."
+        rm -rf $WICIMAGEFILE $cloudFWFile && sync
         exit 1
     fi
     # Remove the compressed file for space saving.
@@ -94,7 +100,7 @@ ota_rootfs_mount_point=$EXTBLOCK/ota_rootfs
 target_rootfs_mount_point=$EXTBLOCK/target_rootfs
 old_boot_bkup=$EXTBLOCK/old_boot_bkup
 
-# Function to clean up the mounts and loop devices on exit condition.
+# Function to clean up the mounts and loop devices on exit condition including trap deregistration.
 clean_up() {
     logger "Cleaning up the mounts and loop devices."
     for mountPointName in $ota_boot_mount_point $ota_rootfs_mount_point $target_rootfs_mount_point; do
@@ -118,7 +124,7 @@ clean_up() {
         rm -f $cloudFWFile
     fi
     sync
-    # remove the signal handlers
+    # deregister the signal handlers
     trap - INT TERM HUP
 }
 
