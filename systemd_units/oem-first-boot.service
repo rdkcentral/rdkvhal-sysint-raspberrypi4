@@ -1,0 +1,12 @@
+[Unit]
+Description=OEM first boot status updation service
+After=multi-user.target
+ConditionPathExists=!/opt/persistent/first-boot-done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/oem-first-boot.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
