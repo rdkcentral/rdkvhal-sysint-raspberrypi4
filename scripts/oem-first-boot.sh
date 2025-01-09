@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ##########################################################################
 # If not stated otherwise in this file or this component's LICENSE
@@ -42,4 +42,3 @@ fi
 mkdir -p /opt/persistent
 touch /opt/persistent/first-boot-done
 echo "First boot related setup is completed."
-
