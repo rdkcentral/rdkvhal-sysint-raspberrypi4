@@ -48,10 +48,12 @@ echo "This is the first boot. Performing setup..."
 
 mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
 
+# PartnerID is used in Conf payloads.
 if [ ! -f "$PARTNER_ID_FILE" ]; then
     echo "community" > "$PARTNER_ID_FILE"
 fi
 
+# DeviceID is used in XCast as UUID.
 if [ ! -f "$DEVICE_ID_FILE" ]; then
     serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
     if [ -z "$serial" ]; then
