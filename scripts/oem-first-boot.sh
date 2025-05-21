@@ -23,22 +23,47 @@
 # the help of cloud services. Due to limitations of the RDK reference build
 # to have such cloud instance support, create required files at first boot.
 
-if [ -f /opt/persistent/first-boot-done ]; then
-    echo "'first-boot-done' detected. seems not a fresh boot."
+PERSISTENT_DIR="/opt/persistent"
+AUTH_SERVICE_DIR="/opt/www/authService"
+PARTNER_ID_FILE="$AUTH_SERVICE_DIR/partnerId3.dat"
+DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceId3.dat"
+FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
+BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
+
+# Check for required command binaries and exit if not found.
+REQUIRED_BINS="uuidgen mfr_util mkdir touch echo"
+for bin in $REQUIRED_BINS; do
+    if ! command -v "$bin" >/dev/null 2>&1; then
+        echo "Error: '$bin' not found in PATH."
+        exit 1
+    fi
+done
+
+if [ -f "$FIRST_BOOT_FLAG" ]; then
+    echo "'first-boot-done' detected. Not a fresh boot."
     exit 0
 fi
+
 echo "This is the first boot. Performing setup..."
-mkdir -p /opt/www/authService
 
-if [ ! -f /opt/www/authService/partnerId3.dat ]; then
-    echo "community" > /opt/www/authService/partnerId3.dat
+mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
+
+if [ ! -f "$PARTNER_ID_FILE" ]; then
+    echo "community" > "$PARTNER_ID_FILE"
 fi
 
-if [ ! -f /opt/bspcomplete.ini ]; then
-    touch /opt/bspcomplete.ini
+if [ ! -f "$DEVICE_ID_FILE" ]; then
+    serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
+    if [ -z "$serial" ]; then
+        echo "Error: Failed to retrieve serial number from mfr_util."
+        exit 1
+    fi
+    uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"
 fi
 
-# Create the flag file to indicate the script has run
-mkdir -p /opt/persistent
-touch /opt/persistent/first-boot-done
+if [ ! -f "$BSP_COMPLETE_FILE" ]; then
+    touch "$BSP_COMPLETE_FILE"
+fi
+
+touch "$FIRST_BOOT_FLAG"
 echo "First boot related setup is completed."
