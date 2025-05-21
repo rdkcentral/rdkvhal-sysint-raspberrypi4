@@ -67,3 +67,4 @@ fi
 
 touch "$FIRST_BOOT_FLAG"
 echo "First boot related setup is completed."
+
