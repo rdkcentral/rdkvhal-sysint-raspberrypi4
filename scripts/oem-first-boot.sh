@@ -26,7 +26,7 @@
 PERSISTENT_DIR="/opt/persistent"
 AUTH_SERVICE_DIR="/opt/www/authService"
 PARTNER_ID_FILE="$AUTH_SERVICE_DIR/partnerId3.dat"
-DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceId3.dat"
+DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceid.dat"
 FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
