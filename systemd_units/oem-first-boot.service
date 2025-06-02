@@ -18,7 +18,8 @@
 ##########################################################################
 [Unit]
 Description=OEM first boot status updation service
-After=multi-user.target
+Before=multi-user.target
+After=local-fs.target remote-fs.target
 ConditionPathExists=!/opt/persistent/first-boot-done
 
 [Service]
