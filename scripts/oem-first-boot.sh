@@ -31,7 +31,7 @@ FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
 # Check for required command binaries and exit if not found.
-REQUIRED_BINS="uuidgen mfr_util mkdir touch echo"
+REQUIRED_BINS="uuidgen mfrHalUtility mkdir touch echo"
 for bin in $REQUIRED_BINS; do
     if ! command -v "$bin" >/dev/null 2>&1; then
         echo "Error: '$bin' not found in PATH."
@@ -55,7 +55,7 @@ fi
 
 # DeviceID is used in XCast as UUID.
 if [ ! -f "$DEVICE_ID_FILE" ]; then
-    serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
+    serial="$(mfrHalUtility -r manufacturingserialnumber | grep 'mfrSerializedData.buf' | awk -F"'" '{print $2}' | tr -d '\r\n')"
     if [ -z "$serial" ]; then
         echo "Error: Failed to retrieve serial number from mfr_util."
         exit 1
