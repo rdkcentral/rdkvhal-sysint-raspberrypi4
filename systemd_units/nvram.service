@@ -18,7 +18,9 @@
 ##########################################################################
 [Unit]
 Description=Dummy NVRAM Service
-Before=multi-user.target
+After=tmp.mount
+DefaultDependencies=no
+Before=local-fs.target
 
 [Service]
 Type=oneshot
@@ -26,4 +28,4 @@ ExecStart=/bin/true
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=local-fs.target
