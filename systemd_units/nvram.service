@@ -17,14 +17,12 @@
 # limitations under the License.
 ##########################################################################
 [Unit]
-Description=OEM first boot status updation service
+Description=Dummy NVRAM Service
 Before=multi-user.target
-After=local-fs.target remote-fs.target
-ConditionPathExists=!/opt/persistent/first-boot-done
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/oem-first-boot.sh
+ExecStart=/bin/true
 RemainAfterExit=yes
 
 [Install]
