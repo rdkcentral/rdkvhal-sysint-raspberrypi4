@@ -1,0 +1,16 @@
+{
+  "vendorGpuSupport": {
+    "devNodes": [
+      "/dev/ashmem",
+      "/dev/dma_heap/system",
+      "/dev/dma_heap/system-uncached",
+      "/dev/dri/card0",
+      "/dev/dri/card1",
+      "/dev/dri/renderD128",
+      "/dev/ttyS0"
+    ],
+    "groupIds": [
+      "apps"
+    ]
+  }
+}
