@@ -6,8 +6,7 @@
       "/dev/dma_heap/system-uncached",
       "/dev/dri/card0",
       "/dev/dri/card1",
-      "/dev/dri/renderD128",
-      "/dev/ttyS0"
+      "/dev/dri/renderD128"
     ],
     "groupIds": [
       "apps"
