@@ -1,0 +1,13 @@
+[Unit]
+Description=Bluetooth Adapter Reset
+Requires=bluetooth.service btmgr.service
+After=bluetooth.service btmgr.service
+Before=ctrlm-main.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bt-reset.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
