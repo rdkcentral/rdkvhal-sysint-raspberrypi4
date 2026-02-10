@@ -19,9 +19,28 @@
 # limitations under the License.
 ##########################################################################
 
+REQUIRED_BINS="rfkill sleep"
+
+for bin in $REQUIRED_BINS; do
+    if ! command -v "$bin" >/dev/null 2>&1; then
+        echo "[BT-RESET][ERROR] Required command '$bin' not found in PATH." >&2
+        exit 1
+    fi
+done
+
 echo "[BT-RESET] Resetting Bluetooth adapter..."
-rfkill block bluetooth
+
+rfkill block bluetooth || {
+    echo "[BT-RESET][ERROR] Failed to block Bluetooth." >&2
+    exit 1
+}
+
 sleep 0.5
-rfkill unblock bluetooth
+
+rfkill unblock bluetooth || {
+    echo "[BT-RESET][ERROR] Failed to unblock Bluetooth." >&2
+    exit 1
+}
+
 sleep 0.5
 echo "[BT-RESET] Done"
