@@ -24,7 +24,7 @@ Before=ctrlm-main.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/bt-reset.sh
+ExecStart=/usr/bin/rpiBTReset
 RemainAfterExit=yes
 
 [Install]
