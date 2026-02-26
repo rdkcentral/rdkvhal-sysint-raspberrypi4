@@ -18,13 +18,14 @@
 ##########################################################################
 [Unit]
 Description=OEM first boot status updation service
-Before=multi-user.target
+RequiresMountsFor=/opt
+Before=wpeframework.service multi-user.target
 After=local-fs.target remote-fs.target
-ConditionPathExists=!/opt/persistent/first-boot-done
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/oem-first-boot.sh
+ExecStartPre=/bin/sh -c 'test -f /opt/ai2managers || touch /opt/ai2managers'
+ExecStart=/bin/sh -c 'test -f /opt/persistent/first-boot-done || exec /usr/bin/oem-first-boot.sh'
 RemainAfterExit=yes
 
 [Install]
