@@ -21,16 +21,16 @@ set -eu
 # limitations under the License.
 ##########################################################################
 
-# The following files are required to be dynamically created at runtime with
-# the help of cloud services. Due to limitations of the RDK reference build
-# to have such cloud instance support, create required files at first boot.
+# The following files are required to start the RDK AppManager related plugins
+# and App Gateway services. Until middleware transition completes on all platforms,
+# these files are required to be enabled on reference RDK builds.
 
 # RDK AppManager & App Gateway related status files
 ENABLE_APP_MANAGER_FILE="/opt/ai2managers"
 ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
 
 log() {
-    echo "[APPMANAGER-ENABLE] $*"
+    echo "[TRANSITION-MARKERS] $*"
 }
 
 create_if_missing() {
@@ -41,7 +41,7 @@ create_if_missing() {
         return
     fi
 
-    log "Creating '$file_path' to enable service."
+    log "Creating transition marker '$file_path'."
     if ! touch "$file_path"; then
         log "Error: Failed to create '$file_path'."
         exit 1

@@ -17,7 +17,7 @@
 # limitations under the License.
 ##########################################################################
 [Unit]
-Description=Enable RDK AppManager Services
+Description=Enable transition markers for AppManager and App Gateway
 RequiresMountsFor=/opt
 Before=wpeframework.service
 After=local-fs.target
@@ -25,7 +25,7 @@ After=local-fs.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/enable-rdk-appmanager-services.sh
+ExecStart=/usr/bin/enable-transition-markers.sh
 TimeoutStartSec=30
 
 [Install]
