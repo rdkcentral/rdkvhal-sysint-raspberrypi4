@@ -30,6 +30,10 @@ DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceid.dat"
 FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
+# RDK AppManager & App Gateway related status files
+ENABLE_APP_MANAGER_FILE="/opt/ai2managers"
+ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
+
 # Check for required command binaries and exit if not found.
 REQUIRED_BINS="uuidgen mfr_util mkdir touch echo"
 for bin in $REQUIRED_BINS; do
@@ -38,6 +42,16 @@ for bin in $REQUIRED_BINS; do
         exit 1
     fi
 done
+
+# Check and create ENABLE_APP_MANAGER_FILE if not present
+if [ ! -f "$ENABLE_APP_MANAGER_FILE" ]; then
+	touch "$ENABLE_APP_MANAGER_FILE"
+fi
+
+# Check and create ENABLE_APP_GATEWAY_FILE if not present
+if [ ! -f "$ENABLE_APP_GATEWAY_FILE" ]; then
+	touch "$ENABLE_APP_GATEWAY_FILE"
+fi
 
 if [ -f "$FIRST_BOOT_FLAG" ]; then
     echo "'first-boot-done' detected. Not a fresh boot."
@@ -69,4 +83,3 @@ fi
 
 touch "$FIRST_BOOT_FLAG"
 echo "First boot related setup is completed."
-
