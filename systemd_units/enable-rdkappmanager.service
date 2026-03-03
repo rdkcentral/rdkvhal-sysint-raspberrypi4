@@ -17,7 +17,7 @@
 # limitations under the License.
 ##########################################################################
 [Unit]
-Description=Enable RDK AppManager Services
+Description=Enable RDK AppManager and AppGateway Services
 RequiresMountsFor=/opt
 Before=wpeframework.service
 After=local-fs.target
