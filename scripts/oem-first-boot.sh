@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 ##########################################################################
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
@@ -30,21 +32,25 @@ DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceid.dat"
 FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
+log() {
+    echo "[OEM-FIRST-BOOT] $*"
+}
+
 # Check for required command binaries and exit if not found.
-REQUIRED_BINS="uuidgen mfr_util mkdir touch echo"
+REQUIRED_BINS="uuidgen mfr_util mkdir touch tr"
 for bin in $REQUIRED_BINS; do
     if ! command -v "$bin" >/dev/null 2>&1; then
-        echo "Error: '$bin' not found in PATH."
+        log "Error: '$bin' not found in PATH."
         exit 1
     fi
 done
 
 if [ -f "$FIRST_BOOT_FLAG" ]; then
-    echo "'first-boot-done' detected. Not a fresh boot."
+    log "'first-boot-done' detected. Not a fresh boot."
     exit 0
 fi
 
-echo "This is the first boot. Performing setup..."
+log "This is the first boot. Performing setup..."
 
 mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
 
@@ -57,7 +63,7 @@ fi
 if [ ! -f "$DEVICE_ID_FILE" ]; then
     serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
     if [ -z "$serial" ]; then
-        echo "Error: Failed to retrieve serial number from mfr_util."
+        log "Error: Failed to retrieve serial number from mfr_util."
         exit 1
     fi
     uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"
@@ -68,5 +74,4 @@ if [ ! -f "$BSP_COMPLETE_FILE" ]; then
 fi
 
 touch "$FIRST_BOOT_FLAG"
-echo "First boot related setup is completed."
-
+log "First boot related setup is completed."
