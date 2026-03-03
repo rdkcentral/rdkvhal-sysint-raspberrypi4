@@ -46,11 +46,13 @@ done
 # Check and create ENABLE_APP_MANAGER_FILE if not present
 if [ ! -f "$ENABLE_APP_MANAGER_FILE" ]; then
 	touch "$ENABLE_APP_MANAGER_FILE"
+	echo "Created '$ENABLE_APP_MANAGER_FILE'."
 fi
 
 # Check and create ENABLE_APP_GATEWAY_FILE if not present
 if [ ! -f "$ENABLE_APP_GATEWAY_FILE" ]; then
 	touch "$ENABLE_APP_GATEWAY_FILE"
+	echo "Created '$ENABLE_APP_GATEWAY_FILE'."
 fi
 
 if [ -f "$FIRST_BOOT_FLAG" ]; then
