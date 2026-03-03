@@ -52,7 +52,10 @@ fi
 
 log "This is the first boot. Performing setup..."
 
-mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
+if ! mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"; then
+    log "Error: Failed to create required directories '$AUTH_SERVICE_DIR' and/or '$PERSISTENT_DIR'."
+    exit 1
+fi
 
 # PartnerID is used in Conf payloads.
 if [ ! -f "$PARTNER_ID_FILE" ]; then
