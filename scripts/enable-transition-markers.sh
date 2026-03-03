@@ -30,7 +30,7 @@ ENABLE_APP_MANAGER_FILE="/opt/ai2managers"
 ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
 
 log() {
-    echo "[TRANSITION-MARKERS] $*"
+    echo "[TRANSITION-MARKERS]" "$@"
 }
 
 create_if_missing() {

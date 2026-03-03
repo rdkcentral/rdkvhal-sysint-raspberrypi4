@@ -33,7 +33,7 @@ FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
 log() {
-    echo "[OEM-FIRST-BOOT] $*"
+    echo "[OEM-FIRST-BOOT]" "$@"
 }
 
 # Check for required command binaries and exit if not found.
@@ -64,7 +64,11 @@ fi
 
 # DeviceID is used in XCast as UUID.
 if [ ! -f "$DEVICE_ID_FILE" ]; then
-    serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
+    if ! serial_raw="$(mfr_util --MfgSerialnumber 2>/dev/null)"; then
+        log "Error: mfr_util failed to retrieve serial number."
+        exit 1
+    fi
+    serial="$(printf '%s' "$serial_raw" | tr -d '\r\n')"
     if [ -z "$serial" ]; then
         log "Error: Failed to retrieve serial number from mfr_util."
         exit 1
