@@ -30,19 +30,22 @@ ENABLE_APP_MANAGER_FILE="/opt/ai2managers"
 ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
 
 log() {
-	echo "[APPMANAGER-ENABLE] $*"
+    echo "[APPMANAGER-ENABLE] $*"
 }
 
 create_if_missing() {
-	file_path="$1"
+    file_path="$1"
 
-	if [ -f "$file_path" ]; then
-		log "'$file_path' detected. Already enabled."
-		return
-	fi
+    if [ -f "$file_path" ]; then
+        log "'$file_path' detected. Already enabled."
+        return
+    fi
 
-	log "Creating '$file_path' to enable service."
-	touch "$file_path"
+    log "Creating '$file_path' to enable service."
+    if ! touch "$file_path"; then
+        log "Error: Failed to create '$file_path'."
+        exit 1
+    fi
 }
 
 # Check for required command binaries and exit if not found.

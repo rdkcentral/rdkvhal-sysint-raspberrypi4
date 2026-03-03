@@ -56,7 +56,10 @@ mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
 
 # PartnerID is used in Conf payloads.
 if [ ! -f "$PARTNER_ID_FILE" ]; then
-    echo "community" > "$PARTNER_ID_FILE"
+    if ! echo "community" > "$PARTNER_ID_FILE"; then
+        log "Error: Failed to write '$PARTNER_ID_FILE'."
+        exit 1
+    fi
 fi
 
 # DeviceID is used in XCast as UUID.
@@ -66,12 +69,21 @@ if [ ! -f "$DEVICE_ID_FILE" ]; then
         log "Error: Failed to retrieve serial number from mfr_util."
         exit 1
     fi
-    uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"
+    if ! uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"; then
+        log "Error: Failed to write '$DEVICE_ID_FILE'."
+        exit 1
+    fi
 fi
 
 if [ ! -f "$BSP_COMPLETE_FILE" ]; then
-    touch "$BSP_COMPLETE_FILE"
+    if ! touch "$BSP_COMPLETE_FILE"; then
+        log "Error: Failed to create '$BSP_COMPLETE_FILE'."
+        exit 1
+    fi
 fi
 
-touch "$FIRST_BOOT_FLAG"
+if ! touch "$FIRST_BOOT_FLAG"; then
+    log "Error: Failed to create '$FIRST_BOOT_FLAG'."
+    exit 1
+fi
 log "First boot related setup is completed."
