@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 ##########################################################################
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
@@ -30,43 +32,65 @@ DEVICE_ID_FILE="$AUTH_SERVICE_DIR/deviceid.dat"
 FIRST_BOOT_FLAG="$PERSISTENT_DIR/first-boot-done"
 BSP_COMPLETE_FILE="/opt/bspcomplete.ini"
 
+log() {
+    echo "[OEM-FIRST-BOOT]" "$@"
+}
+
 # Check for required command binaries and exit if not found.
-REQUIRED_BINS="uuidgen mfr_util mkdir touch echo"
+REQUIRED_BINS="uuidgen mfr_util mkdir touch tr"
 for bin in $REQUIRED_BINS; do
     if ! command -v "$bin" >/dev/null 2>&1; then
-        echo "Error: '$bin' not found in PATH."
+        log "Error: '$bin' not found in PATH."
         exit 1
     fi
 done
 
 if [ -f "$FIRST_BOOT_FLAG" ]; then
-    echo "'first-boot-done' detected. Not a fresh boot."
+    log "'first-boot-done' detected. Not a fresh boot."
     exit 0
 fi
 
-echo "This is the first boot. Performing setup..."
+log "This is the first boot. Performing setup..."
 
-mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"
+if ! mkdir -p "$AUTH_SERVICE_DIR" "$PERSISTENT_DIR"; then
+    log "Error: Failed to create required directories '$AUTH_SERVICE_DIR' and/or '$PERSISTENT_DIR'."
+    exit 1
+fi
 
 # PartnerID is used in Conf payloads.
 if [ ! -f "$PARTNER_ID_FILE" ]; then
-    echo "community" > "$PARTNER_ID_FILE"
+    if ! echo "community" > "$PARTNER_ID_FILE"; then
+        log "Error: Failed to write '$PARTNER_ID_FILE'."
+        exit 1
+    fi
 fi
 
 # DeviceID is used in XCast as UUID.
 if [ ! -f "$DEVICE_ID_FILE" ]; then
-    serial="$(mfr_util --MfgSerialnumber 2>/dev/null | tr -d '\r\n')"
-    if [ -z "$serial" ]; then
-        echo "Error: Failed to retrieve serial number from mfr_util."
+    if ! serial_raw="$(mfr_util --MfgSerialnumber 2>/dev/null)"; then
+        log "Error: mfr_util failed to retrieve serial number."
         exit 1
     fi
-    uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"
+    serial="$(printf '%s' "$serial_raw" | tr -d '\r\n')"
+    if [ -z "$serial" ]; then
+        log "Error: Failed to retrieve serial number from mfr_util."
+        exit 1
+    fi
+    if ! uuidgen --sha1 --namespace @dns --name "$serial" > "$DEVICE_ID_FILE"; then
+        log "Error: Failed to write '$DEVICE_ID_FILE'."
+        exit 1
+    fi
 fi
 
 if [ ! -f "$BSP_COMPLETE_FILE" ]; then
-    touch "$BSP_COMPLETE_FILE"
+    if ! touch "$BSP_COMPLETE_FILE"; then
+        log "Error: Failed to create '$BSP_COMPLETE_FILE'."
+        exit 1
+    fi
 fi
 
-touch "$FIRST_BOOT_FLAG"
-echo "First boot related setup is completed."
-
+if ! touch "$FIRST_BOOT_FLAG"; then
+    log "Error: Failed to create '$FIRST_BOOT_FLAG'."
+    exit 1
+fi
+log "First boot related setup is completed."
