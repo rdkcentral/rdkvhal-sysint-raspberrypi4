@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
 #
-# Copyright 2025 RDK Management
+# Copyright 2026 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@
 # limitations under the License.
 ##########################################################################
 [Unit]
-Description=OEM first boot status updation service
+Description=Enable transition markers for AppManager and App Gateway
 RequiresMountsFor=/opt
-Before=multi-user.target
-After=local-fs.target remote-fs.target
-ConditionPathExists=!/opt/persistent/first-boot-done
+Before=wpeframework.service
+After=local-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/oem-first-boot.sh
 RemainAfterExit=yes
-TimeoutStartSec=60
+ExecStart=/usr/bin/enable-transition-markers.sh
+TimeoutStartSec=30
 
 [Install]
 WantedBy=multi-user.target
