@@ -1,0 +1,82 @@
+{
+  "keyMappings": [
+    { "keyCode": 1, "mapped": { "keyCode": 8, "modifiers": [] }},
+    { "keyCode": 158, "mapped": { "keyCode": 8, "modifiers": [] }},
+
+    { "keyCode": 2, "mapped": { "keyCode": 49, "modifiers": [] }},
+    { "keyCode": 3, "mapped": { "keyCode": 50, "modifiers": [] }},
+    { "keyCode": 4, "mapped": { "keyCode": 51, "modifiers": [] }},
+    { "keyCode": 5, "mapped": { "keyCode": 52, "modifiers": [] }},
+    { "keyCode": 6, "mapped": { "keyCode": 53, "modifiers": [] }},
+    { "keyCode": 7, "mapped": { "keyCode": 54, "modifiers": [] }},
+    { "keyCode": 8, "mapped": { "keyCode": 55, "modifiers": [] }},
+    { "keyCode": 9, "mapped": { "keyCode": 56, "modifiers": [] }},
+    { "keyCode": 10, "mapped": { "keyCode": 57, "modifiers": [] }},
+    { "keyCode": 11, "mapped": { "keyCode": 48, "modifiers": [] }},
+
+    { "keyCode": 28, "mapped": { "keyCode": 13, "modifiers": [] }},
+    { "keyCode": 353, "mapped": { "keyCode": 13, "modifiers": [] }},
+
+    { "keyCode": 55, "mapped": { "keyCode": 173, "modifiers": [] }},
+    { "keyCode": 113, "mapped": { "keyCode": 173, "modifiers": [] }},
+
+    { "keyCode": 59, "mapped": { "keyCode": 116, "modifiers": [] }},
+    { "keyCode": 116, "mapped": { "keyCode": 116, "modifiers": [] }},
+
+    { "keyCode": 62, "mapped": { "keyCode": 118, "modifiers": [] }},
+    { "keyCode": 63, "mapped": { "keyCode": 121, "modifiers": [] }},
+    { "keyCode": 64, "mapped": { "keyCode": 120, "modifiers": [] }},
+
+    { "keyCode": 65, "mapped": { "keyCode": 131, "modifiers": [] }},
+
+    { "keyCode": 67, "mapped": { "keyCode": 133, "modifiers": [] }},
+    { "keyCode": 358, "mapped": { "keyCode": 133, "modifiers": [] }},
+
+    { "keyCode": 68, "mapped": { "keyCode": 224, "modifiers": [] }},
+    { "keyCode": 168, "mapped": { "keyCode": 224, "modifiers": [] }},
+
+    { "keyCode": 71, "mapped": { "keyCode": 240, "modifiers": [] }},
+    { "keyCode": 72, "mapped": { "keyCode": 240, "modifiers": [] }},
+    { "keyCode": 73, "mapped": { "keyCode": 240, "modifiers": [] }},
+
+    { "keyCode": 74, "mapped": { "keyCode": 174, "modifiers": [] }},
+    { "keyCode": 114, "mapped": { "keyCode": 174, "modifiers": [] }},
+
+    { "keyCode": 75, "mapped": { "keyCode": 240, "modifiers": [] }},
+    { "keyCode": 76, "mapped": { "keyCode": 240, "modifiers": [] }},
+    { "keyCode": 77, "mapped": { "keyCode": 240, "modifiers": [] }},
+
+    { "keyCode": 78, "mapped": { "keyCode": 175, "modifiers": [] }},
+    { "keyCode": 115, "mapped": { "keyCode": 175, "modifiers": [] }},
+
+    { "keyCode": 79, "mapped": { "keyCode": 118, "modifiers": [] }},
+    { "keyCode": 80, "mapped": { "keyCode": 115, "modifiers": [] }},
+    { "keyCode": 81, "mapped": { "keyCode": 117, "modifiers": [] }},
+
+    { "keyCode": 82, "mapped": { "keyCode": 240, "modifiers": [] }},
+
+    { "keyCode": 87, "mapped": { "keyCode": 227, "modifiers": [] }},
+    { "keyCode": 164, "mapped": { "keyCode": 227, "modifiers": [] }},
+
+    { "keyCode": 88, "mapped": { "keyCode": 223, "modifiers": [] }},
+    { "keyCode": 208, "mapped": { "keyCode": 223, "modifiers": [] }},
+
+    { "keyCode": 102, "mapped": { "keyCode": 36, "modifiers": [] }},
+    { "keyCode": 172, "mapped": { "keyCode": 36, "modifiers": [] }},
+
+    { "keyCode": 103, "mapped": { "keyCode": 38, "modifiers": [] }},
+
+    { "keyCode": 104, "mapped": { "keyCode": 33, "modifiers": [] }},
+    { "keyCode": 402, "mapped": { "keyCode": 33, "modifiers": [] }},
+
+    { "keyCode": 105, "mapped": { "keyCode": 37, "modifiers": [] }},
+    { "keyCode": 106, "mapped": { "keyCode": 39, "modifiers": [] }},
+    { "keyCode": 108, "mapped": { "keyCode": 40, "modifiers": [] }},
+
+    { "keyCode": 109, "mapped": { "keyCode": 34, "modifiers": [] }},
+    { "keyCode": 403, "mapped": { "keyCode": 34, "modifiers": [] }},
+
+    { "keyCode": 111, "mapped": { "keyCode": 117, "modifiers": [] }},
+    { "keyCode": 185, "mapped": { "keyCode": 113, "modifiers": [] }}
+  ]
+}

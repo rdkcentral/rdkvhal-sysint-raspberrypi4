@@ -1,0 +1,2 @@
+[Service]
+Environment="RDK_WINDOW_MANAGER_KEYMAP_FILE=/etc/rcu_keymap.json"
