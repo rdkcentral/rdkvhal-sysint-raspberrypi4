@@ -48,7 +48,7 @@
                 "name": "Tatlow RDK",
                 "advertisingNames": {
                     "regexPairing" : "Tatlow RDK"
-                },
+                },
                 "scanNameFormat": "Tatlow RDK",
                 "standbyMode": "C",
                 "services": {
@@ -68,7 +68,7 @@
                 "name": "Lima M1 RDK",
                 "advertisingNames": {
                     "regexPairing" : "Lima M1 RDK"
-                },
+                },
                 "scanNameFormat": "Lima M1 RDK",
                 "standbyMode": "C",
                 "services": {
