@@ -26,7 +26,7 @@ set -eu
 # these files are required to be enabled on reference RDK builds.
 
 # RDK AppManager & App Gateway related status files
-ENABLE_APP_MANAGER_FILE="/opt/ai2managers"
+ENABLE_APP_MANAGER_FILE="/etc/rdkappmanagers"
 ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
 
 log() {
