@@ -26,6 +26,7 @@ set -eu
 # these files are required to be enabled on reference RDK builds.
 
 # App Gateway related status files
+ENABLE_AI2MANAGERS_FILE="/tmp/ai2managers"
 ENABLE_APP_GATEWAY_FILE="/opt/appgatewayenabled"
 
 log() {
@@ -57,5 +58,6 @@ for bin in $REQUIRED_BINS; do
 done
 
 create_if_missing "$ENABLE_APP_GATEWAY_FILE"
+create_if_missing "$ENABLE_AI2MANAGERS_FILE"
 
 exit 0
