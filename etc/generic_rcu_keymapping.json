@@ -14,6 +14,13 @@
     { "keyCode": 62, "mapped": { "keyCode": 65, "modifiers": [] }},
     { "keyCode": 111, "mapped": { "keyCode": 64, "modifiers": [] }},
     { "keyCode": 185, "mapped": { "keyCode": 60, "modifiers": [] }},
-    { "keyCode": 67, "mapped": { "keyCode": 184, "modifiers": [] }}
+    { "keyCode": 67, "mapped": { "keyCode": 184, "modifiers": [] }},
+    { "keyCode": 158, "mapped": { "keyCode": 14, "modifiers": [] }},
+    { "keyCode": 358, "mapped": { "keyCode": 191, "modifiers": [] }},
+    { "keyCode": 583, "mapped": { "keyCode": 167, "modifiers": [] }},
+    { "keyCode": 402, "mapped": { "keyCode": 104, "modifiers": [] }},
+    { "keyCode": 403, "mapped": { "keyCode": 109, "modifiers": [] }},
+    { "keyCode": 207, "mapped": { "keyCode": 164, "modifiers": [] }},
+    { "keyCode": 362, "mapped": { "keyCode": 67, "modifiers": [] }}
   ]
 }
